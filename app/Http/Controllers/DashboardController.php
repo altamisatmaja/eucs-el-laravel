@@ -13,6 +13,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // dd(session());
         $reference = $request->query('references');
 
         if ($reference) {
@@ -44,12 +45,20 @@ class DashboardController extends Controller
                 'formattedData' => $formattedData,
                 'success' => session('success'),
                 'reference' => $reference,
-                'referenceData' => $referenceData
+                'referenceData' => $referenceData,
+                'sessionRecordId' => $recordIds,
             ]);
         }
 
         return view('dashboard', [
             'success' => session('success')
         ]);
+    }
+
+    public function clear()
+    {
+        session()->forget(['existingRecordId', 'recordIds']);
+
+        return redirect()->route('dashboard')->with('success', 'Session dibersihkan.');
     }
 }

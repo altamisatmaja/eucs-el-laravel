@@ -10,14 +10,20 @@ class AnalysisController extends Controller
 {
     // Tambahkan properti untuk skala maksimum
     const MAX_SCALE = 5; // Asumsi skala 1-5, sesuaikan jika berbeda
-    
+
     public function index(Request $request)
     {
         $reference = $request->query('references');
+        if (!$reference) {
+            return view('analysis.index', [
+                'results' => $results ?? '',
+                'reference' => $reference ?? ''
+            ]);
+        }
         // Get all X and Y variables directly from RecordValue
         $xData = $this->getVariableData('x', $reference);
         $yData = $this->getVariableData('y', $reference);
-        
+
         // Perform EUCS calculations
         $results = [
             'X' => $this->calculateEucsStats($xData),
@@ -28,7 +34,7 @@ class AnalysisController extends Controller
                 'Y' => $this->calculateAchievement($yData)
             ]
         ];
-        
+
         return view('analysis.index', [
             'results' => $results,
             'reference' => $reference
@@ -38,26 +44,26 @@ class AnalysisController extends Controller
     private function getVariableData($type, $reference = null): Collection
     {
         $query = RecordValue::where('variable', 'like', strtolower($type) . '%');
-        
+
         if ($reference) {
             $query->where('record_id', $reference);
         }
-        
+
         return $query->get()->groupBy('variable');
     }
 
     private function calculateEucsStats(Collection $groupedData): array
     {
         $stats = [];
-        
+
         foreach ($groupedData as $variable => $values) {
             $numericValues = $values->pluck('value')->toArray();
             $n = count($numericValues);
-            
+
             // EUCS specific calculations
             $sum = array_sum($numericValues);
             $sumSquares = array_sum(array_map(fn($v) => $v ** 2, $numericValues));
-            
+
             $stats[$variable] = [
                 'n' => $n,
                 'sum' => $sum,
@@ -70,30 +76,30 @@ class AnalysisController extends Controller
                 'range' => max($numericValues) - min($numericValues)
             ];
         }
-        
+
         return $stats;
     }
 
     private function calculateAchievement(Collection $groupedData): array
     {
         $achievement = [];
-        
+
         foreach ($groupedData as $variable => $values) {
             $numericValues = $values->pluck('value')->toArray();
             $n = count($numericValues);
             $sum = array_sum($numericValues);
             $mean = $n > 0 ? $sum / $n : 0;
-            
+
             // Hitung nilai capaian: (mean / skala maksimum) * 100%
             $achievementScore = ($mean / self::MAX_SCALE) * 100;
-            
+
             $achievement[$variable] = [
                 'mean' => $mean,
                 'achievement_percentage' => $achievementScore,
                 'interpretation' => $this->interpretAchievement($achievementScore)
             ];
         }
-        
+
         return $achievement;
     }
 
@@ -110,16 +116,16 @@ class AnalysisController extends Controller
     {
         $comparison = [];
         $allVariables = array_unique(array_merge($xData->keys()->toArray(), $yData->keys()->toArray()));
-        
+
         foreach ($allVariables as $var) {
             $xValues = $xData->get($var, collect())->pluck('value')->toArray();
             $yValues = $yData->get($var, collect())->pluck('value')->toArray();
-            
+
             if (!empty($xValues) && !empty($yValues)) {
                 // Calculate Euclidean distance between X and Y dimensions
                 $distance = $this->calculateEuclideanDistance($xValues, $yValues);
                 $similarity = 1 / (1 + $distance); // Convert distance to similarity measure
-                
+
                 $comparison[$var] = [
                     'distance' => $distance,
                     'similarity' => $similarity,
@@ -127,7 +133,7 @@ class AnalysisController extends Controller
                 ];
             }
         }
-        
+
         return $comparison;
     }
 
@@ -136,11 +142,11 @@ class AnalysisController extends Controller
         // Make sure both arrays have same length
         $count = min(count($x), count($y));
         $sumSquares = 0;
-        
+
         for ($i = 0; $i < $count; $i++) {
             $sumSquares += ($x[$i] - $y[$i]) ** 2;
         }
-        
+
         return sqrt($sumSquares);
     }
 

@@ -39,7 +39,8 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <img class="h-8 w-auto" src="https://via.placeholder.com/150x50?text=Logo" alt="Logo">
+                        {{-- <img class="h-8 w-auto" src="https://via.placeholder.com/150x50?text=Logo" alt="Logo"> --}}
+                        <h2>EUCS</h2>
                     </a>
                 </div>
 
@@ -58,41 +59,45 @@
                         <ul class="flex flex-wrap -mb-px">
                             <li class="mr-2">
                                 <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('home') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                    href="{{ route('dashboard') }}">Home</a>
+                                    href="{{ route('dashboard', ['references' => session('existingRecordId')]) }}">Home</a>
                             </li>
                             @if (!request()->has('references'))
                                 <li class="mr-2">
                                     <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('data/x') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                        href="{{ route('data.index', ['type' => 'x']) }}">Data X</a>
+                                        href="{{ route('data.index', ['type' => 'x', 'references' => session('existingRecordId')]) }}">
+                                        Data X
+                                    </a>
+
                                 </li>
                             @else
                                 <li class="mr-2">
                                     <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('data/x') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                        href="{{ route('data.index', ['type' => 'x', 'reference' => request()->query('references')]) }}">Data
+                                        href="{{ route('data.index', ['type' => 'x', 'references' => request()->query('references')]) }}">Data
                                         X</a>
                                 </li>
                             @endif
                             @if (!request()->has('references'))
                                 <li class="mr-2">
                                     <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('data/y') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                        href="{{ route('data.index', ['type' => 'y']) }}">Data Y</a>
+                                        href="{{ route('data.index', ['type' => 'y', 'references' => session('existingRecordId')]) }}">Data
+                                        Y</a>
                                 </li>
                             @else
                                 <li class="mr-2">
                                     <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('data/y') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                        href="{{ route('data.index', ['type' => 'y', 'reference' => request()->query('references')]) }}">Data
+                                        href="{{ route('data.index', ['type' => 'y', 'references' => request()->query('references')]) }}">Data
                                         Y</a>
                                 </li>
                             @endif
                             @if (!request()->has('references'))
                                 <li class="mr-2">
                                     <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('analysis') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                        href="{{ route('analysis') }}">Hasil</a>
+                                        href="{{ route('analysis', ['references' => session('existingRecordId')]) }}">Hasil</a>
                                 </li>
                             @else
                                 <li class="mr-2">
                                     <a class="inline-block p-4 border-b-2 font-medium text-sm {{ request()->is('analysis') ? 'border-blue-500 text-blue-600 font-bold' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}"
-                                        href="{{ route('analysis', ['reference' => request()->query('references')]) }}">Hasil</a>
+                                        href="{{ route('analysis', ['references' => request()->query('references')]) }}">Hasil</a>
                                 </li>
                             @endif
                         </ul>

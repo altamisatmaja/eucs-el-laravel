@@ -32,11 +32,16 @@ Route::middleware(['auth'])->group(function () {
             ->name('data.index')
             ->where('type', 'x|y')
             ->where('reference', '[0-9]+');
+        Route::get('/clear', [DashboardController::class, 'clear'])->name('dashboard.clear');
         Route::post('/upload', [DataController::class, 'upload'])->name('data.upload');
         Route::get('/edit/{id}', [DataController::class, 'edit'])->name('data.edit');
         Route::put('/update/{id}', [DataController::class, 'update'])->name('data.update');
         Route::delete('/delete/{id}', [DataController::class, 'destroy'])->name('data.destroy');
     });
+
+    Route::get('/data/respondent/{id}/edit', [DataController::class, 'editRespondent'])->name('data.editRespondent');
+    Route::put('/data/respondent/{id}', [DataController::class, 'updateRespondent'])->name('data.updateRespondent');
+    Route::delete('/data/respondent/{id}', [DataController::class, 'destroyRespondent'])->name('data.destroyRespondent');
 
     Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
 });

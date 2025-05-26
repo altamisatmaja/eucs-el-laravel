@@ -17,6 +17,7 @@ class AuthController extends Controller
     // Proses login
     public function login(Request $request)
     {
+        session()->forget(['existingRecordId', 'recordIds']);
         $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required',
@@ -40,6 +41,9 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        session()->flush();
+        $request->session()->forget('existingRecordId');
+        $request->session()->forget('recordIds');
         return redirect('/login');
     }
 }
