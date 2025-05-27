@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col min-h-screen w-full">
         <div class="flex justify-center">
-            <div class="w-full max-w-2xl">
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-gray-800 text-white px-6 py-4">
+            <div class="pb-10 pt-3">
+                <div class="bg-white rounded-lg overflow-hidden border">
+                    <div class="bg-blue-600 text-white px-6 py-4">
                         <h2 class="text-xl font-semibold">Edit Data Responden</h2>
                     </div>
 
@@ -13,7 +13,6 @@
                         <form method="POST" action="{{ route('data.updateRespondent', $id) }}">
                             @csrf
                             @method('PUT')
-
                             <div class="space-y-4">
                                 @foreach ($variables as $variable)
                                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
@@ -43,7 +42,7 @@
                                     Batal
                                 </a>
                                 <button type="submit"
-                                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Simpan Perubahan
                                 </button>
                             </div>

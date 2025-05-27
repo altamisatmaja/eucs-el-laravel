@@ -28,23 +28,20 @@ class DataController extends Controller
                 'hasCurrentData' => !empty($formattedData)
             ]);
         }
-        $typeLower = strtolower($type ?? 'x'); // 'x' or 'y'
-
-        // Check if there's any data at all in the database
+        $typeLower = strtolower($type ?? 'x'); 
+        
         $hasAnyData = RecordValue::exists();
-
-        // Query directly to RecordValue with variable filtering
+        
         $query = RecordValue::where('variable', 'like', $typeLower . '%')
             ->orderBy('record_id');
-
-        // If there's a reference, filter by record_id
+        
         if ($reference) {
             $query->where('record_id', $reference);
         }
 
         $values = $query->get();
 
-        // Prepare data structure
+        
         $formattedData = [];
         $referenceData = [];
 
@@ -78,23 +75,31 @@ class DataController extends Controller
 
         $file = $request->file('file');
 
+        $fileName = $file->getClientOriginalName();
+        $fileExtension = strtolower($file->getClientOriginalExtension());
+
+        
+        $allowedExtensions = ['csv', 'xls', 'xlsx'];
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            return back()->with('error', 'Format file tidak didukung. Silakan upload file CSV atau Excel (.csv, .xls, .xlsx)');
+        }
+
         try {
             $record = Record::create([
                 'user_id' => auth()->id(),
-                'name' => 'Data ' . ' - ' . now()->format('Y-m-d H:i:s'),
+                'name' => pathinfo($fileName, PATHINFO_FILENAME) . ' - ' . now()->format('Y-m-d H:i:s'),
             ]);
-
 
             Excel::import(new RecordValuesImport($record->id), $request->file('file'));
             session(['existingRecordId' => $record->id]);
 
             return redirect()
                 ->route('dashboard', ['references' => $record->id])
-                ->with('success', 'File berhasil diproses!');
+                ->with('success', 'File "' . $fileName . '" berhasil diproses!');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator);
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses file "' . $fileName . '": ' . $e->getMessage());
         }
     }
 
@@ -126,13 +131,13 @@ class DataController extends Controller
 
     public function editRespondent($id)
     {
-        // Get the first record to identify the respondent
+        
         $firstRecord = RecordValue::findOrFail($id);
 
-        // Get all records for this respondent
+        
         $respondentData = $this->getRespondentRecords($firstRecord);
 
-        // Format data for the form
+        
         $formattedData = [];
         foreach ($respondentData as $record) {
             $formattedData[$record->variable] = $record->value;
@@ -149,13 +154,13 @@ class DataController extends Controller
 
     public function updateRespondent(Request $request, $id)
     {
-        // Get the first record to identify the respondent
+        
         $firstRecord = RecordValue::findOrFail($id);
 
-        // Get all records for this respondent
+        
         $respondentData = $this->getRespondentRecords($firstRecord);
 
-        // Update each value
+        
         foreach ($respondentData as $record) {
             $variable = $record->variable;
             if ($request->has($variable)) {
@@ -168,20 +173,20 @@ class DataController extends Controller
 
     private function getRespondentRecords($record)
     {
-        // First get all IDs for this record ordered by ID
+        
         $allIds = RecordValue::where('record_id', $record->record_id)
             ->orderBy('id')
             ->pluck('id')
             ->toArray();
 
-        // Calculate the position and number of variables
+        
         $position = $this->getRespondentPosition($record);
         $varCount = $this->countVariablesForRecord($record->record_id);
 
-        // Get the slice of IDs we need
+        
         $ids = array_slice($allIds, $position, $varCount);
 
-        // Now get the actual records
+        
         return RecordValue::whereIn('id', $ids)->get();
     }
 
@@ -189,20 +194,20 @@ class DataController extends Controller
     {
         $firstRecord = RecordValue::findOrFail($id);
 
-        // Get the position of this respondent
+        
         $position = $this->getRespondentPosition($firstRecord);
         $varCount = $this->countVariablesForRecord($firstRecord->record_id);
 
-        // Get all IDs for this record ordered by ID
+        
         $allIds = RecordValue::where('record_id', $firstRecord->record_id)
             ->orderBy('id')
             ->pluck('id')
             ->toArray();
 
-        // Get the slice of IDs we need to delete
+        
         $idsToDelete = array_slice($allIds, $position, $varCount);
 
-        // Delete the records
+        
         RecordValue::whereIn('id', $idsToDelete)->delete();
 
         return redirect()->back()->with('success', 'Data responden berhasil dihapus');
@@ -210,7 +215,7 @@ class DataController extends Controller
 
     private function getRespondentPosition($record)
     {
-        // Get the position of this respondent in the sequence
+        
         return RecordValue::where('record_id', $record->record_id)
             ->where('variable', $record->variable)
             ->where('id', '<=', $record->id)
@@ -219,13 +224,13 @@ class DataController extends Controller
 
     private function countVariablesForRecord($recordId)
     {
-        // Count how many variables exist for this record
+        
         return RecordValue::where('record_id', $recordId)
             ->distinct('variable')
             ->count('variable');
     }
 
-    // Keep the existing helper methods:
-    // getRespondentPosition()
-    // countVariablesForRecord()
+    
+    
+    
 }

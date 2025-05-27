@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 
 class AnalysisController extends Controller
 {
-    // Tambahkan properti untuk skala maksimum
-    const MAX_SCALE = 5; // Asumsi skala 1-5, sesuaikan jika berbeda
+
+    const MAX_SCALE = 5;
 
     public function index(Request $request)
     {
@@ -20,11 +20,11 @@ class AnalysisController extends Controller
                 'reference' => $reference ?? ''
             ]);
         }
-        // Get all X and Y variables directly from RecordValue
+
         $xData = $this->getVariableData('x', $reference);
         $yData = $this->getVariableData('y', $reference);
 
-        // Perform EUCS calculations
+
         $results = [
             'X' => $this->calculateEucsStats($xData),
             'Y' => $this->calculateEucsStats($yData),
@@ -60,7 +60,7 @@ class AnalysisController extends Controller
             $numericValues = $values->pluck('value')->toArray();
             $n = count($numericValues);
 
-            // EUCS specific calculations
+
             $sum = array_sum($numericValues);
             $sumSquares = array_sum(array_map(fn($v) => $v ** 2, $numericValues));
 
@@ -90,7 +90,7 @@ class AnalysisController extends Controller
             $sum = array_sum($numericValues);
             $mean = $n > 0 ? $sum / $n : 0;
 
-            // Hitung nilai capaian: (mean / skala maksimum) * 100%
+
             $achievementScore = ($mean / self::MAX_SCALE) * 100;
 
             $achievement[$variable] = [
@@ -122,9 +122,9 @@ class AnalysisController extends Controller
             $yValues = $yData->get($var, collect())->pluck('value')->toArray();
 
             if (!empty($xValues) && !empty($yValues)) {
-                // Calculate Euclidean distance between X and Y dimensions
+
                 $distance = $this->calculateEuclideanDistance($xValues, $yValues);
-                $similarity = 1 / (1 + $distance); // Convert distance to similarity measure
+                $similarity = 1 / (1 + $distance);
 
                 $comparison[$var] = [
                     'distance' => $distance,
@@ -139,7 +139,7 @@ class AnalysisController extends Controller
 
     private function calculateEuclideanDistance(array $x, array $y): float
     {
-        // Make sure both arrays have same length
+
         $count = min(count($x), count($y));
         $sumSquares = 0;
 

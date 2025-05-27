@@ -42,12 +42,6 @@
                     </div>
                 </div>
                 
-                <div class="mb-4 flex items-center">
-                    <input type="checkbox" id="remember" name="remember" 
-                           class="mr-2">
-                    <label for="remember" class="text-gray-700">Remember me</label>
-                </div>
-                
                 <button type="submit" 
                         class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition">
                     Login

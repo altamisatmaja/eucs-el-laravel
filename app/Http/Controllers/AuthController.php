@@ -14,7 +14,6 @@ class AuthController extends Controller
         return view('login');
     }
 
-    // Proses login
     public function login(Request $request)
     {
         session()->forget(['existingRecordId', 'recordIds']);
@@ -35,7 +34,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Proses logout
     public function logout(Request $request)
     {
         Auth::logout();

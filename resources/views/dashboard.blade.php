@@ -1,23 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="flex flex-col min-h-screen">
-
-        <div class="container mx-auto ">
-            <div class="px-4 py-6  rounded justify-center items-center">
-                <div
-                    class="flex-grow container mx-auto px-4 py-6 border border-gray-300 rounded justify-center items-center max-w-7xl">
-
-                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Selamat datang, {{ $user->name ?? 'Tamu' }}</h1>
-                    <p>Aplikasi ini bagian dari penelitian skripsi mahasiswa strata satu (S1) Program Studi Sistem Informasi
-                        Universitas
-                        Tiga Serangkai yang menggunakan metode EUCS untuk mengetahui tingkat kepuasan user terhadap aplikasi
-                        "DANA".
+    <div class="flex flex-col min-h-screen min-w-full">
+        <div class="container mx-auto">
+            <div class="py-6 rounded justify-center items-center">
+                <div class="flex-grow container mx-auto px-4 py-6 border border-gray-300 rounded justify-center items-center">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Selamat datang, {{ auth()->user()->name ?? 'Tamu' }}</h1>
+                    <p class="text-gray-600 mb-6">
+                        Aplikasi ini bagian dari penelitian skripsi mahasiswa strata satu (S1) Program Studi Sistem Informasi
+                        Universitas Tiga Serangkai yang menggunakan metode EUCS untuk mengetahui tingkat kepuasan user terhadap aplikasi "DANA".
                     </p>
 
-
                     <div class="p-6">
-                        <!-- Only show upload button if there's no reference parameter -->
                         @auth
                             @if (!request()->has('references'))
                                 <div class="text-center mb-2">
@@ -52,12 +46,6 @@
                             <div class="text-center mb-2">
                                 <a href="{{ route('login') }}"
                                     class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md inline-flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
-                                        </path>
-                                    </svg>
                                     Masuk
                                 </a>
                             </div>
@@ -65,66 +53,74 @@
                     </div>
                 </div>
             </div>
+            
             @auth
                 @if (request()->has('references'))
                     <!-- Show records and tables only if they exist (when reference parameter exists) -->
                     @foreach ($recordIds as $recordId)
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-sm text-center">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                @if (isset($formattedData[$recordId]))
-                                                    @php
-                                                        // Get all variables without type filtering
-                                                        $variables = array_keys($formattedData[$recordId]);
-                                                        sort($variables);
-
-                                                        // Format variable names for headers
-                                                        $displayVariables = array_map(function ($var) {
-                                                            if (preg_match('/^([xy])(\d)(\d)$/', $var, $matches)) {
-                                                                $prefix = strtoupper($matches[1]);
-                                                                $mainNum = $matches[2];
-                                                                $subNum = $matches[3];
-                                                                return "{$prefix}{$mainNum}.{$subNum}";
-                                                            }
-                                                            return $var;
-                                                        }, $variables);
-                                                    @endphp
-
-                                                    @foreach ($displayVariables as $header)
-                                                        <th>{{ $header }}</th>
-                                                    @endforeach
-                                                @endif
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                        <div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 rounded border">
+                                    <thead class="bg-blue-200">
+                                        <tr>
+                                            <th scope="col" class="font-bold px-2 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                                                No
+                                            </th>
                                             @if (isset($formattedData[$recordId]))
                                                 @php
-                                                    $firstVar = $variables[0] ?? null;
-                                                    $respondentCount = $firstVar
-                                                        ? count($formattedData[$recordId][$firstVar])
-                                                        : 0;
+                                                    // Get all variables without type filtering
+                                                    $variables = array_keys($formattedData[$recordId]);
+                                                    sort($variables);
+
+                                                    // Format variable names for headers
+                                                    $displayVariables = array_map(function ($var) {
+                                                        if (preg_match('/^([xy])(\d)(\d)$/', $var, $matches)) {
+                                                            $prefix = strtoupper($matches[1]);
+                                                            $mainNum = $matches[2];
+                                                            $subNum = $matches[3];
+                                                            return "{$prefix}{$mainNum}.{$subNum}";
+                                                        }
+                                                        return $var;
+                                                    }, $variables);
                                                 @endphp
 
-                                                @for ($i = 0; $i < $respondentCount; $i++)
-                                                    <tr>
-                                                        @foreach ($variables as $var)
-                                                            <td>{{ $formattedData[$recordId][$var][$i] ?? '' }}</td>
-                                                        @endforeach
-                                                    </tr>
-                                                @endfor
+                                                @foreach ($displayVariables as $header)
+                                                    <th scope="col" class="font-bold px-2 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                                                        {{ $header }}
+                                                    </th>
+                                                @endforeach
                                             @endif
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @if (isset($formattedData[$recordId]))
+                                            @php
+                                                $firstVar = $variables[0] ?? null;
+                                                $respondentCount = $firstVar
+                                                    ? count($formattedData[$recordId][$firstVar])
+                                                    : 0;
+                                            @endphp
+
+                                            @for ($i = 0; $i < $respondentCount; $i++)
+                                                <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100">
+                                                    <td class="px-2 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {{ $i + 1 }}
+                                                    </td>
+                                                    @foreach ($variables as $var)
+                                                        <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {{ $formattedData[$recordId][$var][$i] ?? '' }}
+                                                        </td>
+                                                    @endforeach
+                                                </tr>
+                                            @endfor
+                                        @endif
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     @endforeach
                 @endif
             @endauth
-
         </div>
 
         <!-- Upload Modal -->
@@ -183,7 +179,10 @@
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
             // Open modal
-            document.getElementById('openUploadModal').addEventListener('click', openModal);
+            const uploadBtn = document.getElementById('openUploadModal');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', openModal);
+            }
 
             // Close modal with ESC key
             document.addEventListener('keydown', function(e) {
