@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class AnalysisController extends Controller
 {
-
     const MAX_SCALE = 5;
 
     public function index(Request $request)
@@ -23,7 +22,6 @@ class AnalysisController extends Controller
 
         $xData = $this->getVariableData('x', $reference);
         $yData = $this->getVariableData('y', $reference);
-
 
         $results = [
             'X' => $this->calculateEucsStats($xData),
@@ -49,7 +47,12 @@ class AnalysisController extends Controller
             $query->where('record_id', $reference);
         }
 
-        return $query->get()->groupBy('variable');
+        // Group by main variable (x1, x2, etc.) instead of sub-variables
+        return $query->get()->map(function ($item) {
+            // Extract main variable (e.g., 'x1' from 'x11' or 'x12')
+            $item->main_variable = preg_replace('/([a-zA-Z]+\d+)\d+/', '$1', $item->variable);
+            return $item;
+        })->groupBy('main_variable');
     }
 
     private function calculateEucsStats(Collection $groupedData): array
@@ -57,9 +60,9 @@ class AnalysisController extends Controller
         $stats = [];
 
         foreach ($groupedData as $variable => $values) {
+            // Flatten all sub-variable values into one array
             $numericValues = $values->pluck('value')->toArray();
             $n = count($numericValues);
-
 
             $sum = array_sum($numericValues);
             $sumSquares = array_sum(array_map(fn($v) => $v ** 2, $numericValues));
@@ -89,7 +92,6 @@ class AnalysisController extends Controller
             $n = count($numericValues);
             $sum = array_sum($numericValues);
             $mean = $n > 0 ? $sum / $n : 0;
-
 
             $achievementScore = ($mean / self::MAX_SCALE) * 100;
 
@@ -122,7 +124,6 @@ class AnalysisController extends Controller
             $yValues = $yData->get($var, collect())->pluck('value')->toArray();
 
             if (!empty($xValues) && !empty($yValues)) {
-
                 $distance = $this->calculateEuclideanDistance($xValues, $yValues);
                 $similarity = 1 / (1 + $distance);
 
@@ -139,7 +140,6 @@ class AnalysisController extends Controller
 
     private function calculateEuclideanDistance(array $x, array $y): float
     {
-
         $count = min(count($x), count($y));
         $sumSquares = 0;
 

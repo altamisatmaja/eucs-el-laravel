@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Data')
+
 @section('content')
     <div class="flex flex-col min-h-screen min-w-full">
         <div class="container mx-auto">

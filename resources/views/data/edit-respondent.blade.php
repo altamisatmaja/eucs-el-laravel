@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Data')
+
 @section('content')
     <div class="flex flex-col min-h-screen w-full">
         <div class="flex justify-center">

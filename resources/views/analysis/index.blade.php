@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Hasil')
+
 @section('content')
     <div class="container mx-auto">
         @if (!request()->has('references'))
@@ -31,7 +33,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Var</th>
                                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Standar Deviasi</th>
                                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Nilai Capaian</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Interpretasi</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Kategori</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -110,7 +112,7 @@
 
             <!-- Interpretation Guide -->
             <div class="bg-white mb-8">
-                <h4 class="font-bold text-lg mb-3">Panduan Interpretasi</h4>
+                <h4 class="font-bold text-lg mb-3">Panduan Kategori</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <h5 class="font-semibold mb-2">Nilai Capaian:</h5>
