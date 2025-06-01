@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class AnalysisController extends Controller
 {
-    const MAX_SCALE = 5;
+    const MAX_SCALE = 4;
 
     public function index(Request $request)
     {
@@ -21,7 +21,7 @@ class AnalysisController extends Controller
         }
 
         $xData = $this->getVariableData('x', $reference);
-        $yData = $this->getVariableData('y', $reference);
+        $yData = $this->getVariableData('y', $reference, true);
 
         $results = [
             'X' => $this->calculateEucsStats($xData),
@@ -39,7 +39,7 @@ class AnalysisController extends Controller
         ]);
     }
 
-    private function getVariableData($type, $reference = null): Collection
+    private function getVariableData($type, $reference = null, $groupAll = false): Collection
     {
         $query = RecordValue::where('variable', 'like', strtolower($type) . '%');
 
@@ -47,10 +47,14 @@ class AnalysisController extends Controller
             $query->where('record_id', $reference);
         }
 
-        // Group by main variable (x1, x2, etc.) instead of sub-variables
-        return $query->get()->map(function ($item) {
-            // Extract main variable (e.g., 'x1' from 'x11' or 'x12')
-            $item->main_variable = preg_replace('/([a-zA-Z]+\d+)\d+/', '$1', $item->variable);
+        return $query->get()->map(function ($item) use ($groupAll) {
+            if ($groupAll) {
+
+                $item->main_variable = strtolower(substr($item->variable, 0, 1));
+            } else {
+
+                $item->main_variable = preg_replace('/([a-zA-Z]+\d+)\d+/', '$1', $item->variable);
+            }
             return $item;
         })->groupBy('main_variable');
     }
@@ -60,7 +64,6 @@ class AnalysisController extends Controller
         $stats = [];
 
         foreach ($groupedData as $variable => $values) {
-            // Flatten all sub-variable values into one array
             $numericValues = $values->pluck('value')->toArray();
             $n = count($numericValues);
 
@@ -74,9 +77,9 @@ class AnalysisController extends Controller
                 'sum_squares' => $sumSquares,
                 'variance' => $n > 1 ? ($sumSquares - ($sum ** 2 / $n)) / ($n - 1) : 0,
                 'std_dev' => $n > 1 ? sqrt(($sumSquares - ($sum ** 2 / $n)) / ($n - 1)) : 0,
-                'min' => min($numericValues),
+                'min' => 1,
                 'max' => max($numericValues),
-                'range' => max($numericValues) - min($numericValues)
+                'range' => max($numericValues) - 1
             ];
         }
 
@@ -107,11 +110,11 @@ class AnalysisController extends Controller
 
     private function interpretAchievement(float $percentage): string
     {
-        if ($percentage >= 80) return 'Sangat Baik';
-        if ($percentage >= 70) return 'Baik';
-        if ($percentage >= 60) return 'Cukup';
-        if ($percentage >= 50) return 'Kurang';
-        return 'Sangat Kurang';
+        if ($percentage >= 90) return 'Sangat Baik';
+        if ($percentage >= 80) return 'Baik';            
+        if ($percentage >= 70) return 'Cukup';           
+        if ($percentage >= 60) return 'Kurang';          
+        return 'Sangat Kurang';                         
     }
 
     private function compareDimensions(Collection $xData, Collection $yData): array

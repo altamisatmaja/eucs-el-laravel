@@ -3,14 +3,47 @@
 @section('title', 'Beranda')
 
 @section('content')
-    <div class="flex flex-col min-h-screen min-w-full">
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .pagination li {
+            margin: 0 0.25rem;
+        }
+
+        .pagination li a {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            color: #4b5563;
+        }
+
+        .pagination li.active a {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .pagination li.disabled a {
+            color: #9ca3af;
+            pointer-events: none;
+        }
+    </style>
+    <div class="flex flex-col min-h-screen min-w-full py-5">
         <div class="container mx-auto">
             <div class="py-6 rounded justify-center items-center">
-                <div class="flex-grow container mx-auto px-4 py-6 border border-gray-300 rounded justify-center items-center">
-                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Selamat datang, {{ auth()->user()->name ?? 'Tamu' }}</h1>
+                <div
+                    class="flex-grow container mx-auto px-4 py-6 border border-gray-300 rounded justify-center items-center">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Selamat datang, {{ auth()->user()->name ?? 'Tamu' }}
+                    </h1>
                     <p class="text-gray-600 mb-6">
-                        Aplikasi ini bagian dari penelitian skripsi mahasiswa strata satu (S1) Program Studi Sistem Informasi
-                        Universitas Tiga Serangkai yang menggunakan metode EUCS untuk mengetahui tingkat kepuasan user terhadap aplikasi "DANA".
+                        Aplikasi ini bagian dari penelitian skripsi mahasiswa strata satu (S1) Program Studi Sistem
+                        Informasi
+                        Universitas Tiga Serangkai yang menggunakan metode EUCS untuk mengetahui tingkat kepuasan user
+                        terhadap aplikasi "DANA".
                     </p>
 
                     <div class="p-6">
@@ -55,7 +88,7 @@
                     </div>
                 </div>
             </div>
-            
+
             @auth
                 @if (request()->has('references'))
                     <!-- Show records and tables only if they exist (when reference parameter exists) -->
@@ -65,16 +98,15 @@
                                 <table class="min-w-full divide-y divide-gray-200 rounded border">
                                     <thead class="bg-blue-200">
                                         <tr>
-                                            <th scope="col" class="font-bold px-2 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                                            <th scope="col"
+                                                class="font-bold px-2 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
                                                 No
                                             </th>
-                                            @if (isset($formattedData[$recordId]))
+                                            @if (isset($formattedData))
                                                 @php
-                                                    // Get all variables without type filtering
-                                                    $variables = array_keys($formattedData[$recordId]);
+                                                    $variables = array_keys($formattedData);
                                                     sort($variables);
 
-                                                    // Format variable names for headers
                                                     $displayVariables = array_map(function ($var) {
                                                         if (preg_match('/^([xy])(\d)(\d)$/', $var, $matches)) {
                                                             $prefix = strtoupper($matches[1]);
@@ -87,7 +119,8 @@
                                                 @endphp
 
                                                 @foreach ($displayVariables as $header)
-                                                    <th scope="col" class="font-bold px-2 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                                                    <th scope="col"
+                                                        class="font-bold px-2 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
                                                         {{ $header }}
                                                     </th>
                                                 @endforeach
@@ -95,22 +128,20 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
-                                        @if (isset($formattedData[$recordId]))
+                                        @if (isset($formattedData))
                                             @php
                                                 $firstVar = $variables[0] ?? null;
-                                                $respondentCount = $firstVar
-                                                    ? count($formattedData[$recordId][$firstVar])
-                                                    : 0;
+                                                $respondentCount = $firstVar ? count($formattedData[$firstVar]) : 0;
                                             @endphp
 
                                             @for ($i = 0; $i < $respondentCount; $i++)
                                                 <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100">
                                                     <td class="px-2 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {{ $i + 1 }}
+                                                        {{ ($values->currentPage() - 1) * $values->perPage() + $i + 1 }}
                                                     </td>
                                                     @foreach ($variables as $var)
                                                         <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {{ $formattedData[$recordId][$var][$i] ?? '' }}
+                                                            {{ $formattedData[$var][$i] ?? '' }}
                                                         </td>
                                                     @endforeach
                                                 </tr>
@@ -119,6 +150,12 @@
                                     </tbody>
                                 </table>
                             </div>
+                            @if (isset($pagination))
+                                <div
+                                    class="px-4 py-3 bg-white border border-gray-200 sm:px-6">
+                                    {{ $values->withQueryString()->links('vendor.pagination.tailwind') }}
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 @endif

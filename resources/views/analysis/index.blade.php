@@ -3,7 +3,7 @@
 @section('title', 'Hasil')
 
 @section('content')
-    <div class="container mx-auto">
+    <div class="container mx-auto py-5">
         @if (!request()->has('references'))
             <div class="flex flex-col min-h-screen">
                 <div class="rounded justify-center items-center">
@@ -18,7 +18,7 @@
                 Tidak ditemukan data dengan reference ID tersebut.
             </div>
         @else
-            <!-- Combined Statistics and Achievement Section -->
+            
             <div class="card mb-4">
                 <div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
                     <div class="overflow-x-auto">
@@ -51,7 +51,7 @@
                                             'achievement' => $results['achievement']['Y'][$var] ?? null
                                         ];
                                     }
-                                    $index = 1; // Initialize counter
+                                    $index = 1; 
                                 @endphp
 
                                 @foreach ($combinedData as $variable => $data)
@@ -62,18 +62,21 @@
                                         $interpretationText = '';
                                         
                                         if ($achievement) {
-                                            if ($achievement['achievement_percentage'] >= 80) {
+                                            if ($achievement['achievement_percentage'] >= 90) {
                                                 $interpretationClass = 'bg-green-100 text-green-800';
                                                 $interpretationText = 'Sangat Baik';
-                                            } elseif ($achievement['achievement_percentage'] >= 70) {
+                                            } elseif ($achievement['achievement_percentage'] >= 80) {
                                                 $interpretationClass = 'bg-blue-100 text-blue-800';
                                                 $interpretationText = 'Baik';
-                                            } elseif ($achievement['achievement_percentage'] >= 60) {
+                                            } elseif ($achievement['achievement_percentage'] >= 70) {
                                                 $interpretationClass = 'bg-yellow-100 text-yellow-800';
                                                 $interpretationText = 'Cukup';
+                                            } elseif ($achievement['achievement_percentage'] >= 60) {
+                                                $interpretationClass = 'bg-yellow-100 text-yellow-800';
+                                                $interpretationText = 'Kurang';
                                             } else {
                                                 $interpretationClass = 'bg-red-100 text-red-800';
-                                                $interpretationText = 'Kurang';
+                                                $interpretationText = 'Sangat Kurang';
                                             }
                                         }
                                     @endphp
@@ -110,18 +113,18 @@
                 </div>
             </div>
 
-            <!-- Interpretation Guide -->
+            
             <div class="bg-white mb-8">
                 <h4 class="font-bold text-lg mb-3">Panduan Kategori</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <h5 class="font-semibold mb-2">Nilai Capaian:</h5>
                         <ul class="space-y-2">
-                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span> Sangat Baik (≥80%)</li>
-                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span> Baik (70-79%)</li>
-                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-2"></span> Cukup (60-69%)</li>
-                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span> Kurang (50-59%)</li>
-                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-gray-800 rounded-full mr-2"></span> Sangat Kurang (<50%)</li>
+                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span> Sangat Baik (90-100%)</li>
+                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span> Baik (80-90%)</li>
+                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-2"></span> Cukup (70-80%)</li>
+                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span> Kurang (60-70%)</li>
+                            <li class="flex items-center"><span class="inline-block w-3 h-3 bg-gray-800 rounded-full mr-2"></span> Sangat Kurang (<60%)</li>
                         </ul>
                     </div>
                 </div>

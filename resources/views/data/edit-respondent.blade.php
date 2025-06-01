@@ -3,7 +3,7 @@
 @section('title', 'Edit Data')
 
 @section('content')
-    <div class="flex flex-col min-h-screen w-full">
+    <div class="flex flex-col min-h-screen w-full py-5">
         <div class="flex justify-center">
             <div class="pb-10 pt-3">
                 <div class="bg-white rounded-lg overflow-hidden border">

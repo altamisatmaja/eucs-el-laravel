@@ -3,7 +3,7 @@
 @section('title', 'Data')
 
 @section('content')
-    <div class="flex flex-col min-h-screen min-w-full">
+    <div class="flex flex-col min-h-screen min-w-full py-5">
         <div class="container mx-auto">
             @if (!request()->has('references') && empty($formattedData))
                 <div class="flex flex-col min-h-screen">
@@ -84,10 +84,17 @@
                                                 $respondentCount = $firstVar
                                                     ? count($formattedData[$recordId][$firstVar])
                                                     : 0;
+
+                                                $currentPage = request()->query('page', 1); // Ambil parameter page dari URL, default 1
+                                                $perPage = $values->perPage(); // Ambil jumlah item per halaman dari paginator
+                                                $startNumber = ($currentPage - 1) * $perPage; // Hitung nomor awal
+
                                             @endphp
 
                                             @for ($i = 0; $i < $respondentCount; $i++)
                                                 @php
+                                                    $recordNumber = $startNumber + $i + 1; // Nomor urut berdasarkan halaman
+
                                                     $firstRecordValue = App\Models\RecordValue::where(
                                                         'record_id',
                                                         $recordId,
@@ -101,7 +108,7 @@
                                                     class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100">
                                                     <td
                                                         class="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {{ $i + 1 }}</td>
+                                                        {{ $recordNumber }}</td>
                                                     @foreach ($filteredVariables as $var)
                                                         <td class="py-1 whitespace-nowrap text-sm text-gray-500">
                                                             @php
@@ -152,6 +159,11 @@
                                     </tbody>
                                 </table>
                             </div>
+                            @if (isset($pagination) && $pagination->total() > $pagination->perPage())
+                                <div class="px-4 py-3 bg-white border border-gray-200 sm:px-6">
+                                    {{ $pagination->withQueryString()->links('vendor.pagination.tailwind') }}
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach

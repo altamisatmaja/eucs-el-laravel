@@ -9,61 +9,91 @@ use App\Models\RecordValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class DataController extends Controller
 {
     public function index($type = null, Request $request)
     {
-
         $reference = $request->query('references');
+        $perPage = 10;
+        $typeLower = strtolower($type ?? 'x');
+
+        $hasAnyData = RecordValue::exists();
+
+        // Jika tidak ada reference, tampilkan daftar record_ids
         if (!$reference) {
+            $recordIds = RecordValue::distinct('record_id')->pluck('record_id')->toArray();
+
             return view('data.index', [
-                'recordIds' => $recordIds ?? '',
-                'formattedData' => $formattedData ?? '',
+                'recordIds' => $recordIds,
+                'formattedData' => [],
                 'type' => strtoupper($type ?? 'X'),
                 'success' => session('success'),
                 'reference' => $reference,
-                'referenceData' => $referenceData ?? '',
-                'hasAnyData' => $hasAnyData ?? '',
-                'hasCurrentData' => !empty($formattedData)
+                'referenceData' => [],
+                'hasAnyData' => $hasAnyData,
+                'hasCurrentData' => false
             ]);
         }
-        $typeLower = strtolower($type ?? 'x'); 
-        
-        $hasAnyData = RecordValue::exists();
-        
-        $query = RecordValue::where('variable', 'like', $typeLower . '%')
-            ->orderBy('record_id');
-        
-        if ($reference) {
-            $query->where('record_id', $reference);
-        }
 
-        $values = $query->get();
+        // Jika ada reference, ambil data dengan pagination yang benar
+        $query = RecordValue::where('record_id', $reference)
+            ->where('variable', 'like', $typeLower . '%')
+            ->orderBy('variable')
+            ->orderBy('id'); // Pastikan ada kolom untuk mengurutkan responden
 
-        
+        $totalRespondents = $query->count();
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+        // Ambil semua data untuk record_id ini
+        $allValues = $query->get()->groupBy('variable');
+
+        // Format data dengan struktur yang diharapkan
         $formattedData = [];
         $referenceData = [];
 
-        foreach ($values as $value) {
-            $formattedData[$value->record_id][$value->variable][] = $value->value;
-
-            if ($reference && $value->record_id == $reference) {
-                $referenceData[$value->variable] = $value->value;
+        foreach ($allValues as $variable => $values) {
+            foreach ($values as $index => $value) {
+                $formattedData[$reference][$variable][$index] = $value->value;
             }
         }
 
-        $recordIds = array_keys($formattedData);
+        // Buat paginator untuk responden
+        $firstVar = array_key_first($formattedData[$reference] ?? []);
+        $respondentCount = $firstVar ? count($formattedData[$reference][$firstVar]) : 0;
+
+        // Potong data responden berdasarkan halaman
+        $paginatedData = [];
+        $start = ($currentPage - 1) * $perPage;
+        $end = $start + $perPage;
+
+        foreach ($formattedData[$reference] as $variable => $respondents) {
+            $paginatedData[$variable] = array_slice($respondents, $start, $perPage);
+        }
+
+        $values = new LengthAwarePaginator(
+            $paginatedData,
+            $respondentCount,
+            $perPage,
+            $currentPage,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query()
+            ]
+        );
 
         return view('data.index', [
-            'recordIds' => $recordIds,
-            'formattedData' => $formattedData,
+            'recordIds' => [$reference],
+            'formattedData' => [$reference => $paginatedData],
             'type' => strtoupper($type ?? 'X'),
             'success' => session('success'),
             'reference' => $reference,
             'referenceData' => $referenceData,
             'hasAnyData' => $hasAnyData,
-            'hasCurrentData' => !empty($formattedData)
+            'hasCurrentData' => !empty($paginatedData),
+            'pagination' => $values,
+            'values' => $values,
         ]);
     }
 
@@ -78,7 +108,7 @@ class DataController extends Controller
         $fileName = $file->getClientOriginalName();
         $fileExtension = strtolower($file->getClientOriginalExtension());
 
-        
+
         $allowedExtensions = ['csv', 'xls', 'xlsx'];
         if (!in_array($fileExtension, $allowedExtensions)) {
             return back()->with('error', 'Format file tidak didukung. Silakan upload file CSV atau Excel (.csv, .xls, .xlsx)');
@@ -131,13 +161,13 @@ class DataController extends Controller
 
     public function editRespondent($id)
     {
-        
+
         $firstRecord = RecordValue::findOrFail($id);
 
-        
+
         $respondentData = $this->getRespondentRecords($firstRecord);
 
-        
+
         $formattedData = [];
         foreach ($respondentData as $record) {
             $formattedData[$record->variable] = $record->value;
@@ -154,13 +184,13 @@ class DataController extends Controller
 
     public function updateRespondent(Request $request, $id)
     {
-        
+
         $firstRecord = RecordValue::findOrFail($id);
 
-        
+
         $respondentData = $this->getRespondentRecords($firstRecord);
 
-        
+
         foreach ($respondentData as $record) {
             $variable = $record->variable;
             if ($request->has($variable)) {
@@ -173,20 +203,20 @@ class DataController extends Controller
 
     private function getRespondentRecords($record)
     {
-        
+
         $allIds = RecordValue::where('record_id', $record->record_id)
             ->orderBy('id')
             ->pluck('id')
             ->toArray();
 
-        
+
         $position = $this->getRespondentPosition($record);
         $varCount = $this->countVariablesForRecord($record->record_id);
 
-        
+
         $ids = array_slice($allIds, $position, $varCount);
 
-        
+
         return RecordValue::whereIn('id', $ids)->get();
     }
 
@@ -194,20 +224,20 @@ class DataController extends Controller
     {
         $firstRecord = RecordValue::findOrFail($id);
 
-        
+
         $position = $this->getRespondentPosition($firstRecord);
         $varCount = $this->countVariablesForRecord($firstRecord->record_id);
 
-        
+
         $allIds = RecordValue::where('record_id', $firstRecord->record_id)
             ->orderBy('id')
             ->pluck('id')
             ->toArray();
 
-        
+
         $idsToDelete = array_slice($allIds, $position, $varCount);
 
-        
+
         RecordValue::whereIn('id', $idsToDelete)->delete();
 
         return redirect()->back()->with('success', 'Data responden berhasil dihapus');
@@ -215,7 +245,7 @@ class DataController extends Controller
 
     private function getRespondentPosition($record)
     {
-        
+
         return RecordValue::where('record_id', $record->record_id)
             ->where('variable', $record->variable)
             ->where('id', '<=', $record->id)
@@ -224,13 +254,9 @@ class DataController extends Controller
 
     private function countVariablesForRecord($recordId)
     {
-        
+
         return RecordValue::where('record_id', $recordId)
             ->distinct('variable')
             ->count('variable');
     }
-
-    
-    
-    
 }
